@@ -1,3 +1,7 @@
 /.obsidian/
 
 *.bin
+
+# Clangd lsp
+/.cache/
+compile_flags.txt
