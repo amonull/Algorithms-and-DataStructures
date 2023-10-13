@@ -1,78 +1,36 @@
 #include "SinglyLinkedList.h"
 
-// TMP FOR TESTING (REMOVE MAIN AFTER COMPLETE)
-int main(void) {
-  SinglyLinkedList_t list = {NULL, NULL, 0}; // declare and init linked list
-  
-  int nodeValHead = 56;
-  int nodeValTail = 400;
-  int nodeValThird = 18;
-  SinglyNode_t headNode = {"int", &nodeValHead, NULL};
-  SinglyNode_t tailNode = {"int", &nodeValTail, NULL};
-  SinglyNode_t thirdNode = {"int", &nodeValThird, NULL};
+#include <stdio.h>
+#include <stdlib.h>
 
-  addFirst(&list, &headNode);
-  addLast(&list, &tailNode);
-  addFirst(&list, &thirdNode);
+SinglyNode_t* generateNode(int value) {
+  SinglyNode_t* pnode = (SinglyNode_t*) malloc(sizeof(SinglyNode_t));
 
-  printf("head value: %d\n", pgetValue(int, list.head)); // first cast void* to int* then dereference
-  printf("tail value: %d\n", pgetValue(int, list.tail));
-  printf("list size: %d\n", list.size);
-  printf("is head == tail: %b\n", list.head == list.tail);
-  printf("head pointer: %p\ntail pointer: %p\n", list.head, list.tail); // head and tail are pointers (pointer comparison)
-  printf("next of head: %d\n", pgetValue(int, getNext(list.head)));
-  printf("is next head null: %b\n", getNext(list.head) == NULL);
-  printf("is next tail null: %b\n", getNext(list.tail) == NULL);
-  printf("\n\n");
-  printf("***Printing List***\n\n");
-  printList(&list);
+  pnode->value = value;
+  pnode->next = NULL;
 
-  removeLast(&list);
-  printf("***Printing List***\n\n");
-  printList(&list);
-
-  removeFist(&list);
-  printf("***Printing List***\n\n");
-  printList(&list);
-
-
-  printf("is head == tail: %b\n", list.head == list.tail);
-
-  removeLast(&list);
-  printf("***Printing List***\n\n");
-  printList(&list);
-
-  return 0;
+  return pnode;
 }
 
-// SinglyNode_t* vgenerateNode(void* value, SinglyNode_t* next) {
-//   // extracting data inside value
-
-//   // XXX: create using malloc so you can free it later instead of just letting it live in mem with static
-//   static SinglyNode_t node = {value, next};
-
-//   return &node;
-// }
-
 void addFirst(SinglyLinkedList_t *list, SinglyNode_t* node) {
-  if (list->size == 0) {
-    list->head = node;
-    list->tail = node;
-    list->head->next = list->tail;
+  if (getListLen(list) == 0) {
+    setHead(list, node);
+    setTail(list, node);
+    setNext(getHead(list), getTail(list));
   } else {
-    node->next = list->head;
-    list->head = node;
+    setNext(node, getHead(list));
+    setHead(list, node);
   }
   list->size++;
 }
 
 void addLast(SinglyLinkedList_t *list, SinglyNode_t* node) {
   if (list->size == 0) {
-    list->head = node;
-    list->tail = node;
+    setHead(list, node);
+    setTail(list, node);
   } else {
-    list->tail->next = node;
-    list->tail = node;
+    setNext(getTail(list), node);
+    setTail(list, node);
   }
   list->size++;
 }
@@ -82,7 +40,9 @@ void removeFist(SinglyLinkedList_t *list) {
     return;
   }
 
+  SinglyNode_t* pfreeNode = list->head;
   list->head = getNext(list->head);
+  free(pfreeNode);
   list->size--;
 
   if (list->size == 1) {
@@ -91,27 +51,20 @@ void removeFist(SinglyLinkedList_t *list) {
 }
 
 void removeLast(SinglyLinkedList_t *list) {
-  if (list->size == 0) {
+  if (getListLen(list) == 0)
     return;
+
+  if (getListLen(list) == 1) {
+    setHead(list, NULL);
+    setTail(list, NULL);
   }
 
-  if (list->head == list->tail) {
-    list->head = NULL;
-    list->tail = NULL;
-  } else {
-    SinglyNode_t* currentNode = list->head;
-
-    while (getNext(getNext(currentNode)) != NULL) {
-      currentNode = getNext(currentNode);
-    }
-
-    currentNode->next = NULL;
+  SinglyNode_t* current = getHead(list);
+  while (getNext(getNext(current)) != NULL) {
+    current = getNext(current);
   }
-  list->size--;
-
-  if (list->size == 1) {
-    list->head = list->tail;
-  }
+  setTail(list, current);
+  setNext(current, NULL);
 }
 
 void setHead(SinglyLinkedList_t* list, SinglyNode_t* head) {
@@ -122,31 +75,41 @@ void setTail(SinglyLinkedList_t *list, SinglyNode_t* tail) {
   list->tail = tail;
 }
 
+void setNext(SinglyNode_t* current, SinglyNode_t* next) {
+  current->next = next;
+}
+
 SinglyNode_t* getNext(SinglyNode_t* node) {
   return node->next;
 }
 
-SinglyNode_t getHead(SinglyLinkedList_t* list) {
-  return *list->head;
+SinglyNode_t* getHead(SinglyLinkedList_t* list) {
+  return list->head;
 }
 
-SinglyNode_t getTail(SinglyLinkedList_t* list) {
-  return *list->tail;
+SinglyNode_t* getTail(SinglyLinkedList_t* list) {
+  return list->tail;
 }
 
-void printList(SinglyLinkedList_t* list) {
-  if (list->size == 0) {
+uint16_t getListLen(SinglyLinkedList_t* list) {
+  return list->size;
+}
+
+int getValue(SinglyNode_t *node) {
+  return node->value;
+}
+
+void setValue(SinglyNode_t *node, int value) {
+  node->value = value;
+}
+
+void printList(SinglyLinkedList_t *list) {
+  SinglyNode_t* current = list->head;
+  if (current == NULL) {
     return;
   }
-
-  int count;
-  SinglyNode_t* currentItem = list->head;
-
-  // while (NULL != getNext(currentItem)->next) {
-  for (count=0; count < list->size; count++) {
-    printf("Element: %d\n", count);
-    printf("Value: %d\n", *(int*)currentItem->value);
-    printf("Pointer: %p\n\n", currentItem);
-    currentItem = getNext(currentItem);
+  while (current != NULL) {
+    printf("node pointer: %p\nnode value: %d\n\n", current, getValue(current));
+    current = getNext(current);
   }
 }
