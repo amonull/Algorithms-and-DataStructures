@@ -54,6 +54,8 @@ void removeLast(SinglyLinkedList_t *list) {
   if (getListLen(list) == 0)
     return;
 
+  SinglyNode_t* pfreeNode = list->tail;
+
   if (getListLen(list) == 1) {
     setHead(list, NULL);
     setTail(list, NULL);
@@ -63,6 +65,7 @@ void removeLast(SinglyLinkedList_t *list) {
   while (getNext(getNext(current)) != NULL) {
     current = getNext(current);
   }
+  free(pfreeNode);
   setTail(list, current);
   setNext(current, NULL);
 }
